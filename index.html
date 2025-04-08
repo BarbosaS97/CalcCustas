@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Cálculo de Custas Processuais</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        #password-modal .modal-content {
+            max-width: 400px;
+            padding: 25px;
+        }
+        #password-error {
+            color: var(--danger-color);
+            margin-top: 10px;
+            display: none;
+        }
+        .resultado-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .download-icon {
+            color: var(--secondary-color);
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .download-icon:hover {
+            color: var(--primary-color);
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="header-content">
+                <div class="header-text">
+                    <h1>Sistema de Cálculo de Custas Processuais</h1>
+                    <p class="subtitle">Em desenvolvimento</p>
+                </div>
+                <a href="#" id="editor-btn" class="editor-btn" title="Editor de Índices">
+                    <i class="fas fa-table"></i>
+                    <span>Editor</span>
+                </a>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="form-container">
+            <form id="form-custas">
+                <div class="form-section">
+                    <h2>Dados do Processo</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tipo-processo">Tipo de Processo:</label>
+                            <select id="tipo-processo" class="form-control" required>
+                                <option value="">Selecione...</option>
+                                <option value="civil-geral">Ação Civil Geral</option>
+                                <option value="cautelar">Processo Cautelar/Jurisdição Voluntária</option>
+                                <option value="inestimavel">Causa de Valor Inestimável</option>
+                                <option value="agravo">Agravo de Instrumento</option>
+                                <option value="penal-geral">Ação Penal Geral</option>
+                                <option value="penal-privada">Ação Penal Privada</option>
+                                <option value="notificacoes">Notificações/Interpelações</option>
+                                <option value="certidoes">Certidões Diversas</option>
+                                <option value="recurso-juizado">Recurso no Juizado Especial Federal/Execução Fiscal</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="valor-causa-group">
+                            <label for="valor-causa">Valor da Causa (R$):</label>
+                            <input type="text" id="valor-causa" class="form-control money-input" placeholder="0,00">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group" id="fase-processo-group">
+                            <label for="fase-processo">Fase do Processo:</label>
+                            <select id="fase-processo" class="form-control">
+                                <option value="inicial">Inicial</option>
+                                <option value="recursal">Recursal (Apelação)</option>
+                                <option value="final">Final (Execução)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="data-ajuizamento-group">
+                            <label for="data-ajuizamento">Data de Ajuizamento (mm/aaaa):</label>
+                            <input type="text" id="data-ajuizamento" class="form-control date-input" placeholder="mm/aaaa">
+                            <small class="form-text">Obrigatório para cálculo de apelação</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group" id="custas-dobro-group">
+                            <label for="custas-dobro">Custas em Dobro?</label>
+                            <select id="custas-dobro" class="form-control">
+                                <option value="nao">Não</option>
+                                <option value="sim">Sim</option>
+                            </select>
+                            <button type="button" id="info-dobro" class="btn-info-icon" title="Informações sobre custas em dobro">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                        <div class="form-group" id="custas-complementares-group">
+                            <label for="complementar-option">Custas Complementares?</label>
+                            <select id="complementar-option" class="form-control">
+                                <option value="nao">Não</option>
+                                <option value="sim">Sim</option>
+                            </select>
+                            <button type="button" id="info-complementar" class="btn-info-icon" title="Informações sobre custas complementares">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="custas-complementares-fields" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="valor-complementar">Valor Pago (R$):</label>
+                                <input type="text" id="valor-complementar" class="form-control money-input" placeholder="0,00">
+                            </div>
+                            <div class="form-group">
+                                <label for="data-complementar">Data do Pagamento (mm/aaaa):</label>
+                                <input type="text" id="data-complementar" class="form-control date-input" placeholder="mm/aaaa">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="descricao-complementar">Descrição:</label>
+                            <input type="text" id="descricao-complementar" class="form-control" placeholder="Descrição das custas complementares">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h2>Dados para Recolhimento</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="instancia">Instância:</label>
+                            <select id="instancia" class="form-control" required>
+                                <option value="">Selecione...</option>
+                                <option value="primeiro-grau">1ª Instância (Primeiro Grau)</option>
+                                <option value="segundo-grau">2ª Instância (Segundo Grau)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="unidade-gestora">Unidade Gestora:</label>
+                            <select id="unidade-gestora" class="form-control" required>
+                                <option value="">Selecione...</option>
+                                <option value="090024">090024 - Seção Judiciária do Acre</option>
+                                <option value="090037">090037 - Seção Judiciária do Amapá</option>
+                                <option value="090002">090002 - Seção Judiciária do Amazonas</option>
+                                <option value="090012">090012 - Seção Judiciária da Bahia</option>
+                                <option value="090023">090023 - Seção Judiciária do Distrito Federal</option>
+                                <option value="090022">090022 - Seção Judiciária de Goiás</option>
+                                <option value="090004">090004 - Seção Judiciária do Maranhão</option>
+                                <option value="090021">090021 - Seção Judiciária do Mato Grosso</option>
+                                <option value="090003">090003 - Seção Judiciária do Pará</option>
+                                <option value="090005">090005 - Seção Judiciária do Piauí</option>
+                                <option value="090025">090025 - Seção Judiciária de Rondônia</option>
+                                <option value="090039">090039 - Seção Judiciária de Roraima</option>
+                                <option value="090038">090038 - Seção Judiciária do Tocantins</option>
+                                <option value="090027">090027 - TRF da 1ª Região</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" id="limpar-btn" class="btn btn-secondary">
+                        <i class="fas fa-eraser"></i> Limpar
+                    </button>
+                    <button type="button" id="ajuda-btn" class="btn btn-info">
+                        <i class="fas fa-question-circle"></i> Ajuda
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-calculator"></i> Calcular Custas
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div id="resultado" class="resultado-container" style="display: none;">
+            <div class="resultado-header">
+                <div class="resultado-title">
+                    <h2>Resultado do Cálculo</h2>
+                    <i class="fas fa-file-pdf download-icon" id="download-pdf" title="Baixar PDF"></i>
+                </div>
+                <div class="resultado-meta">
+                    <span id="data-calculo"></span>
+                </div>
+            </div>
+            
+            <div class="resultado-grid">
+                <div class="resultado-item">
+                    <div class="resultado-label">Tipo de Custa:</div>
+                    <div class="resultado-value" id="tipo-custa"></div>
+                </div>
+                <div class="resultado-item">
+                    <div class="resultado-label">Valor Base:</div>
+                    <div class="resultado-value" id="valor-base"></div>
+                </div>
+                <div class="resultado-item" id="fase-resultado-container" style="display: none;">
+                    <div class="resultado-label">Fase do Processo:</div>
+                    <div class="resultado-value" id="fase-resultado"></div>
+                </div>
+                <div class="resultado-item">
+                    <div class="resultado-label">Instância:</div>
+                    <div class="resultado-value" id="instancia-resultado"></div>
+                </div>
+                <div class="resultado-item">
+                    <div class="resultado-label">Unidade Gestora:</div>
+                    <div class="resultado-value" id="ug-resultado"></div>
+                </div>
+                <div class="resultado-item">
+                    <div class="resultado-label">Código de Recolhimento:</div>
+                    <div class="resultado-value" id="codigo-recolhimento"></div>
+                </div>
+                <div class="resultado-item" id="complementar-resultado" style="display: none;">
+                    <div class="resultado-label">Custas Complementares:</div>
+                    <div class="resultado-value" id="valor-complementar-resultado"></div>
+                </div>
+                <div class="resultado-item" id="dobro-resultado" style="display: none;">
+                    <div class="resultado-label">Custas em Dobro:</div>
+                    <div class="resultado-value">Sim (aplicado o dobro do valor)</div>
+                </div>
+                <div class="resultado-item total">
+                    <div class="resultado-label">Valor Total das Custas:</div>
+                    <div class="resultado-value" id="valor-total"></div>
+                </div>
+            </div>
+            
+            <div id="atualizacao-monetaria" class="atualizacao-container" style="display: none;">
+                <h3><i class="fas fa-chart-line"></i> Atualização Monetária</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="valor-original">Valor Original:</label>
+                        <input type="text" id="valor-original" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="valor-atualizado">Valor Atualizado:</label>
+                        <input type="text" id="valor-atualizado" class="form-control" readonly>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="indice-acumulado">Coeficiente de Correção:</label>
+                        <input type="text" id="indice-acumulado" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="periodo-atualizacao">Período de Atualização:</label>
+                        <input type="text" id="periodo-atualizacao" class="form-control" readonly>
+                    </div>
+                </div>
+                <button type="button" id="info-atualizacao" class="btn-info-icon">
+                    <i class="fas fa-info-circle"></i> Como é calculado?
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de senha para o editor -->
+    <div id="password-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('password-modal').style.display='none'">&times;</span>
+            <h3>Acesso ao Editor de Índices</h3>
+            <div class="form-group">
+                <label for="editor-password">Senha:</label>
+                <input type="password" id="editor-password" class="form-control" placeholder="Digite a senha">
+                <small class="form-text">A senha é necessária para acessar esta função</small>
+            </div>
+            <div id="password-error" style="color: var(--danger-color); margin-top: 10px; display: none;">
+                Senha incorreta. Tente novamente.
+            </div>
+            <button onclick="verifyPassword()" class="btn btn-primary" style="margin-top: 15px;">Acessar</button>
+        </div>
+    </div>
+
+    <!-- Modal de informações -->
+    <div id="info-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Como é calculada a atualização monetária?</h3>
+            <p>A atualização é calculada utilizando os índices IPCA-E acumulados no período entre a data de ajuizamento e a data atual.</p>
+            <p><strong>Fórmula:</strong></p>
+            <p>Coeficiente = (1 + IPCA<sub>m1</sub>/100) × (1 + IPCA<sub>m2</sub>/100) × ... × (1 + IPCA<sub>mn</sub>/100)</p>
+            <p>Onde:</p>
+            <ul>
+                <li>IPCA<sub>m1</sub> é o índice do primeiro mês</li>
+                <li>IPCA<sub>m2</sub> é o índice do segundo mês</li>
+                <li>IPCA<sub>mn</sub> é o índice do último mês</li>
+            </ul>
+            <p><strong>Exemplo:</strong> Para atualizar de 04/2024 até 07/2024:</p>
+            <p>Coeficiente = (1 + 0,38/100) × (1 + 0,46/100) × (1 + 0,39/100) × (1 + 0,01/100)</p>
+            <p>Coeficiente ≈ 1,0124 (1,24% de correção)</p>
+        </div>
+    </div>
+
+    <!-- Modal de informações sobre custas complementares -->
+    <div id="info-complementar-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Sobre Custas Complementares</h3>
+            <p>As custas complementares representam valores já pagos anteriormente que devem ser abatidos do cálculo final.</p>
+            <p><strong>Como funciona:</strong></p>
+            <ul>
+                <li>Informe o valor pago e a data do pagamento</li>
+                <li>O sistema calculará a atualização monetária desse valor até a data atual</li>
+                <li>O valor atualizado será subtraído do total das custas calculadas</li>
+            </ul>
+            <p><strong>Exemplo:</strong></p>
+            <p>Se você pagou R$ 100,00 em 01/2023 e o cálculo atual é R$ 500,00:</p>
+            <p>1. O sistema atualiza os R$ 100,00 para o valor atual (digamos R$ 110,00)</p>
+            <p>2. Subtrai R$ 110,00 de R$ 500,00</p>
+            <p>3. Valor final a pagar: R$ 390,00</p>
+        </div>
+    </div>
+
+    <!-- Modal de informações sobre custas em dobro -->
+    <div id="info-dobro-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Sobre Custas em Dobro</h3>
+            <p>As custas em dobro são aplicadas conforme o §4º do artigo 1.007 do CPC:</p>
+            <p><strong>CPC, Art. 1.007, §4º:</strong> "O recorrente que não comprovar, no ato de interposição do recurso, o recolhimento do preparo, inclusive porte de remessa e de retorno, será intimado, na pessoa de seu advogado, para realizar o recolhimento em dobro, sob pena de deserção."</p>
+            <p><strong>Como funciona no sistema:</strong></p>
+            <ul>
+                <li>O valor calculado das custas será multiplicado por 2</li>
+                <li>Aplica-se apenas a processos não criminais</li>
+                <li>O sistema indica claramente quando as custas estão sendo calculadas em dobro</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="firebaseConfig.js"></script>
+    <script src="script.js"></script>
+    <script src="indices.js"></script>
+    <script>
+        const EDITOR_PASSWORD = "32216752";
+        
+        document.getElementById('editor-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('password-modal').style.display = 'block';
+            document.getElementById('editor-password').focus();
+        });
+
+        function verifyPassword() {
+            const passwordInput = document.getElementById('editor-password');
+            const errorElement = document.getElementById('password-error');
+            
+            if (passwordInput.value === EDITOR_PASSWORD) {
+                window.location.href = 'indices.html';
+            } else {
+                errorElement.style.display = 'block';
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        }
+
+        document.getElementById('editor-password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                verifyPassword();
+            }
+        });
+    </script>
+</body>
+</html>
