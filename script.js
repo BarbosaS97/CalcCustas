@@ -342,15 +342,15 @@ async function gerarPDF() {
     
     // Adicionar informações adicionais se fornecidas
     let yPosition = 36;
-    if (parteRecorrente || parteContraria || numeroProcesso) {
+    if (parteExequente || parteExecutada || numeroProcesso) {
         doc.setFontSize(12);
         doc.setTextColor(40, 40, 40);
         doc.text('Informações Adicionais', 20, yPosition);
         yPosition += 8;
         
         const infoAdicional = [];
-        if (parteRecorrente) infoAdicional.push(['Parte Recorrente', parteRecorrente]);
-        if (parteContraria) infoAdicional.push(['Parte Contrária', parteContraria]);
+        if (parteExequente) infoAdicional.push(['Parte Exequente', parteExequente]);
+        if (parteExecutada) infoAdicional.push(['Parte Executada', parteExecutada]);
         if (numeroProcesso) infoAdicional.push(['Número do Processo', numeroProcesso]);
         
         doc.autoTable({
