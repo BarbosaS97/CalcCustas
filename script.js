@@ -327,8 +327,8 @@ async function gerarPDF() {
     doc.setFontSize(12);
     
     // Solicitar informações adicionais
-    const parteRecorrente = prompt('Nome da parte recorrente (opcional):');
-    const parteContraria = prompt('Nome da parte contrária (opcional):');
+    const parteExequente = prompt('Nome da parte Exequente (opcional):');
+    const parteExecutada = prompt('Nome da parte Executada (opcional):');
     const numeroProcesso = prompt('Número do processo (opcional):');
     
     // Título
